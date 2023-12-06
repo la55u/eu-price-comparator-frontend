@@ -10,6 +10,7 @@ if (!['dev', 'prod'].includes(mode)) {
 }
 
 export default {
+  open: true,
   nodeResolve: {exportConditions: mode === 'dev' ? ['development'] : []},
   preserveSymlinks: true,
   plugins: [],
