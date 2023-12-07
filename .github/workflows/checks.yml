@@ -1,0 +1,21 @@
+name: Lint and build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm ci --force
+      - run: npm run lint
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm ci --force
+      - run: npm run build
