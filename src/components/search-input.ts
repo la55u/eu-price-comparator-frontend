@@ -1,5 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { customElement, state } from "lit/decorators.js";
+import "./view-shop-button";
 
 type SearchResponse = CountryResponse[];
 
@@ -78,6 +79,8 @@ export class SearchInput extends LitElement {
       padding: 8px;
     }
     td > a {
+      white-space: nowrap;
+      text-decoration: none;
       color: var(--color-accent-light);
     }
   `;
@@ -110,8 +113,8 @@ export class SearchInput extends LitElement {
 
   private async fetchResults({ query }: { query: string }): Promise<SearchResponse> {
     const searchParams = new URLSearchParams({ query });
-    return fetch(`https://eu-price-comparer.vercel.app/api/handler?${searchParams}`).then(
-      (res) => res.json()
+    return fetch(`${import.meta.env.VITE_API_BASE}/handler?${searchParams}`).then((res) =>
+      res.json()
     );
   }
 
@@ -120,7 +123,7 @@ export class SearchInput extends LitElement {
   //   this.query = value;
   // }
 
-  private getLowestPrice(prices: Price[]): Price {
+  private getLowestPrice(prices: Price[]): Price | undefined {
     // TODO get lowest price
     return prices[0];
   }
@@ -129,6 +132,7 @@ export class SearchInput extends LitElement {
     return html`
       <form class="input-row" @submit=${this.onSearchSubmit}>
         <input
+          autofocus
           required
           minlength="3"
           name="query"
@@ -168,18 +172,11 @@ export class SearchInput extends LitElement {
                         <tr>
                           <td>${COUNTRY_DATA[item.country_code].flag}</td>
                           <td>${item.item}</td>
-                          <td>${this.getLowestPrice(item.prices).price}</td>
+                          <td>${this.getLowestPrice(item.prices)?.price}</td>
                           <td>
-                            <a
-                              href=${this.getLowestPrice(item.prices).link}
-                              target="_blank"
-                              >Go to shop</a
-                            >
-                            ↗️
-                            <a href="https://example.org" target="_blank"
-                              >View all offers</a
-                            >
-                            ↗️
+                            <view-shop-button
+                              href=${this.getLowestPrice(item.prices)?.link}
+                            ></view-shop-button>
                           </td>
                         </tr>
                       `
