@@ -50,12 +50,6 @@ const COUNTRY_DATA: Record<string, { name: string; flag: string; currency: Curre
 @customElement("search-input")
 export class SearchInput extends LitElement {
   static override styles = css`
-    :host {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
     .input-row {
       position: relative;
 
@@ -100,7 +94,7 @@ export class SearchInput extends LitElement {
     .filters {
       transition: all 0.3s;
       border-radius: var(--radii-md);
-      margin-top: 1rem;
+      margin: 1rem 0;
       padding: 10px 30px;
 
       &[open] {
@@ -163,9 +157,6 @@ export class SearchInput extends LitElement {
       gap: 6px 1rem;
       border-radius: var(--radii-md);
 
-      &:hover {
-        outline: 1px dotted gray;
-      }
       & .price {
         margin-left: auto;
         font-weight: 600;
@@ -178,7 +169,7 @@ export class SearchInput extends LitElement {
         width: 60px;
         aspect-ratio: 1;
         border-radius: 4px;
-        object-fit: cover;
+        object-fit: contain;
       }
     }
   `;
@@ -281,33 +272,40 @@ export class SearchInput extends LitElement {
         ? html`<p>🔍 No results found!</p>`
         : html`
             <section class="results">
-              ${this.rows.flatMap((countryData) =>
-                countryData.items
-                  .map((item) => ({
+              ${this.rows
+                .flatMap((countryData) =>
+                  countryData.items.map((item) => ({
                     ...item,
                     country_code: countryData.country_code,
                   }))
-                  .map(
-                    (item) => html`
-                      <article class="result-item">
-                        <span>${COUNTRY_DATA[item.country_code].flag}</span>
-                        <img src=${item.picture_url} loading="lazy" aria-hidden="true" />
-                        <span class="name">${item.item}</span>
-                        <span class="price">
-                          ${new Intl.NumberFormat(["at", "hu"], {
-                            currency: this.currency.code,
-                            style: "currency",
-                            currencyDisplay: "symbol",
-                          }).format(Number(this.getLowestPrice(item.prices)?.price ?? 0))}
-                        </span>
-                        <view-shop-button
-                          href=${this.getLowestPrice(item.prices)?.link}
-                        ></view-shop-button>
-                      </article>
-                      <hr />
-                    `
-                  )
-              )}
+                )
+                .filter((r) => r.prices.length > 0)
+                .sort((r1, r2) => {
+                  return (
+                    Number(this.getLowestPrice(r1.prices).price) -
+                    Number(this.getLowestPrice(r2.prices).price)
+                  );
+                })
+                .map(
+                  (item) => html`
+                    <article class="result-item">
+                      <span>${COUNTRY_DATA[item.country_code].flag}</span>
+                      <img src=${item.picture_url} loading="lazy" aria-hidden="true" />
+                      <span class="name">${item.item}</span>
+                      <span class="price">
+                        ${new Intl.NumberFormat(["at", "hu"], {
+                          currency: this.currency.code,
+                          style: "currency",
+                          currencyDisplay: "symbol",
+                        }).format(Number(this.getLowestPrice(item.prices).price))}
+                      </span>
+                      <view-shop-button
+                        href=${this.getLowestPrice(item.prices)?.link}
+                      ></view-shop-button>
+                    </article>
+                    <hr />
+                  `
+                )}
             </section>
           `}
     `;
