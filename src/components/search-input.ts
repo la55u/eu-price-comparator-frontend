@@ -1136,18 +1136,20 @@ export class SearchInput extends LitElement {
         border-radius: var(--radii-md);
         margin: 1rem 0;
         padding: 10px 30px;
+        text-align: end;
 
         &[open] {
           background: var(--color-light);
-          //box-shadow: var(--shadow-sm);
         }
         & > summary {
           cursor: pointer;
           display: flex;
+          flex-direction: row-reverse;
           gap: 10px;
           align-items: center;
           list-style: none;
           user-select: none;
+          margin-bottom: 10px;
         }
         & label {
           font-size: 0.8rem;
@@ -1321,14 +1323,14 @@ export class SearchInput extends LitElement {
             type="search"
           />
           <button part="button" ?disabled=${this.isLoading}>
-            Go <gh-octicon icon="search"></gh-octicon>
+            <gh-octicon icon="search"></gh-octicon> Go
           </button>
         </div>
 
         <details class="filters" ${ref(this.filtersRef)}>
           <summary>
-            <gh-octicon vertical-align="middle" icon="sliders"></gh-octicon>
             <span>Filters</span>
+            <gh-octicon vertical-align="middle" icon="sliders"></gh-octicon>
           </summary>
 
           <div>

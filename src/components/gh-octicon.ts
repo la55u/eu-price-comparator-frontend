@@ -28,7 +28,7 @@ class Octicon extends LitElement {
   static get styles() {
     return css`
       svg {
-        display: inline-block;
+        display: block;
         fill: currentcolor;
         user-select: none;
       }
