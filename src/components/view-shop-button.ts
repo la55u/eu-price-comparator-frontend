@@ -48,7 +48,8 @@ export class ViewShopButton extends LitElement {
       const url = data[0];
       window.open(url, "_blank");
     } catch (error) {
-      //
+      // open the original, un-resolved url if the resolve failed
+      window.open(this.href, "_blank");
     } finally {
       this.isLoading = false;
     }
