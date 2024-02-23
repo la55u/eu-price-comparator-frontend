@@ -161,6 +161,7 @@ export class SearchInput extends LitElement {
         margin-left: auto;
         font-weight: 600;
         text-wrap: pretty;
+        font-variant-numeric: tabular-nums;
       }
       & .name {
         max-width: 600px;
