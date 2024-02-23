@@ -22,7 +22,36 @@ html {
   background: #13151a;
   background-size: 224px;
 }
-code {
-  font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono,
-    Bitstream Vera Sans Mono, Courier New, monospace;
+
+body {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+main {
+  width: 100%;
+  padding: 0 1rem;
+  color: white;
+  font-size: 20px;
+  line-height: 1.6;
+}
+
+footer {
+  padding: 1rem;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--color-light);
+  margin-top: auto;
+  font-size: 14px;
+  & a {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 }
