@@ -12,10 +12,13 @@
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
     "@webcomponents/template-shadowroot": "^0.2.1",
-    "astro": "^4.3.5",
     "lit": "^3.1.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "@primer/octicons": "^19.8.0"
+  },
+  "devDependencies": {
+    "@types/primer__octicons": "^19.6.3",
     "typescript": "^5.3.3",
     "vite": "^5.1.1"
   }

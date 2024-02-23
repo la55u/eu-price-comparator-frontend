@@ -1,6 +1,15 @@
 import { LitElement, html, css } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import "./view-shop-button";
+import "./gh-octicon";
+import svgSpinner from "../assets/icons/spinner.svg?raw";
+import { unsafeSVG } from "lit/directives/unsafe-svg.js";
+import { createRef, ref, Ref } from "lit/directives/ref.js";
+
+type SearchParams = {
+  query: string;
+  currency: string;
+};
 
 type SearchResponse = CountryResponse[];
 
@@ -20,9 +29,22 @@ type Price = {
   link: string;
 };
 
-const COUNTRY_DATA = {
-  AT: { name: "Austria", flag: "🇦🇹" },
-  HU: { name: "Hungary", flag: "🇭🇺" },
+type Currency = {
+  code: string;
+  symbol: string;
+};
+
+const COUNTRY_DATA: Record<string, { name: string; flag: string; currency: Currency }> = {
+  AT: {
+    name: "Austria",
+    flag: "🇦🇹",
+    currency: { code: "EUR", symbol: "€" },
+  },
+  HU: {
+    name: "Hungary",
+    flag: "🇭🇺",
+    currency: { code: "HUF", symbol: "Ft" },
+  },
 } as const;
 
 @customElement("search-input")
@@ -33,61 +55,139 @@ export class SearchInput extends LitElement {
       flex-direction: column;
       gap: 1rem;
     }
+
     .input-row {
+      position: relative;
+
+      & input {
+        background-color: var(--color-light);
+        border-radius: var(--radii-full);
+        box-shadow: var(--shadow-sm);
+        color: white;
+        border: none;
+        padding: 0 120px 0 30px;
+        height: 50px;
+        font-size: 20px;
+        min-width: 100px;
+        width: 100%;
+      }
+      & button {
+        position: absolute;
+        right: 4px;
+        top: 4px;
+        bottom: 4px;
+        border-radius: var(--radii-full);
+        background-color: var(--color-accent);
+        color: white;
+        font-weight: bold;
+        outline: none;
+        box-shadow: none;
+        border: none;
+        padding: 0 30px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      & button:disabled {
+        cursor: not-allowed;
+      }
+      & button:hover {
+        opacity: 0.8;
+      }
+    }
+
+    .filters {
+      transition: all 0.3s;
+      border-radius: var(--radii-md);
+      margin-top: 1rem;
+      padding: 10px 30px;
+
+      &[open] {
+        background: var(--color-light);
+        //box-shadow: var(--shadow-sm);
+      }
+      & > summary {
+        cursor: pointer;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        list-style: none;
+        user-select: none;
+      }
+    }
+    .spinner {
       display: flex;
-      gap: 0.5em;
+      justify-content: center;
+      align-items: center;
+      margin-top: 50px;
+      gap: 1em;
     }
-    input {
-      background-color: var(--color-light);
-      border-radius: var(--radii-full);
-      box-shadow: var(--shadow-sm);
-      color: white;
-      border: none;
-      padding: 0 30px;
-      height: 50px;
-      font-size: 20px;
-      flex-grow: 1;
+    .placeholder {
+      display: flex;
+      flex-direction: column;
+      gap: 1em;
+      align-items: center;
+      margin-top: 50px;
+
+      & > img {
+        width: 200px;
+        aspect-ratio: 1;
+        max-width: 50vw;
+      }
+      & > span {
+        font-size: 24px;
+        font-style: italic;
+        font-weight: 600;
+        text-align: center;
+      }
     }
-    button {
-      border-radius: var(--radii-full);
-      background-color: var(--color-accent);
-      color: white;
-      font-weight: bold;
-      outline: none;
-      box-shadow: none;
-      border: none;
-      padding: 0 30px;
-      cursor: pointer;
-    }
-    button:hover {
-      opacity: 0.8;
-    }
-    table {
-      width: 100%;
-      background-color: var(--color-light);
+
+    .results {
+      background: var(--color-light);
       box-shadow: var(--shadow-sm);
       border-radius: var(--radii-md);
       padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      & > hr {
+        width: 100%;
+        opacity: 0.1;
+      }
     }
-    tbody tr:hover {
-      outline: 1px solid gray;
-    }
-    td:last-child {
-      text-align: end;
-    }
-    td {
-      padding: 8px;
-    }
-    td > a {
-      white-space: nowrap;
-      text-decoration: none;
-      color: var(--color-accent-light);
+    .result-item {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px 1rem;
+      border-radius: var(--radii-md);
+
+      &:hover {
+        outline: 1px dotted gray;
+      }
+      & .price {
+        margin-left: auto;
+        font-weight: 600;
+        text-wrap: pretty;
+      }
+      & .name {
+        max-width: 600px;
+      }
+      & img {
+        width: 60px;
+        aspect-ratio: 1;
+        border-radius: 4px;
+        object-fit: cover;
+      }
     }
   `;
 
+  private filtersRef: Ref<HTMLDetailsElement> = createRef();
   @state() private error: string = "";
   @state() private rows: SearchResponse = [];
   @state() private isLoading: boolean = false;
+  @state() private currency: Currency = { code: "HUF", symbol: "Ft" };
 
   private async onSearchSubmit(e: SubmitEvent) {
     if (this.isLoading) return; // prevent spam clicks
@@ -97,11 +197,16 @@ export class SearchInput extends LitElement {
     try {
       this.isLoading = true;
       document.body.style.cursor = "progress";
-      // reset previous state
-      this.error = "";
-      this.rows = [];
 
-      const res = await this.fetchResults({ query: fields.query.toString() });
+      this.error = ""; // reset previous error
+      this.rows = []; // reset previous results
+
+      this.filtersRef.value.open = false; // close the filters panel
+
+      const res = await this.fetchResults({
+        query: fields.query.toString(),
+        currency: this.currency.code,
+      });
       this.rows = res;
     } catch (error) {
       this.error = error.message;
@@ -111,17 +216,19 @@ export class SearchInput extends LitElement {
     }
   }
 
-  private async fetchResults({ query }: { query: string }): Promise<SearchResponse> {
-    const searchParams = new URLSearchParams({ query });
+  private async fetchResults(params: SearchParams): Promise<SearchResponse> {
+    const searchParams = new URLSearchParams(params);
     return fetch(`${import.meta.env.VITE_API_BASE}/handler?${searchParams}`).then((res) =>
       res.json()
     );
   }
 
-  // private onQueryChange(e: InputEvent) {
-  //   const value = (e.target as HTMLInputElement).value;
-  //   this.query = value;
-  // }
+  private onCurrencyChange(event: Event) {
+    const code = (event.target as HTMLSelectElement).value;
+    this.currency = Object.values(COUNTRY_DATA).find(
+      (c) => c.currency.code === code
+    ).currency;
+  }
 
   private getLowestPrice(prices: Price[]): Price | undefined {
     // TODO get lowest price
@@ -130,60 +237,78 @@ export class SearchInput extends LitElement {
 
   override render() {
     return html`
-      <form class="input-row" @submit=${this.onSearchSubmit}>
-        <input
-          autofocus
-          required
-          minlength="3"
-          name="query"
-          placeholder="Search any product..."
-          type="search"
-        />
-        <button part="button">Go <span>&nbsp;🡪</span></button>
+      <form @submit=${this.onSearchSubmit}>
+        <div class="input-row">
+          <input
+            autofocus
+            required
+            autocomplete="off"
+            minlength="3"
+            name="query"
+            placeholder="Search any product..."
+            type="search"
+          />
+          <button part="button" ?disabled=${this.isLoading}>
+            Go <gh-octicon icon="search"></gh-octicon>
+          </button>
+        </div>
+
+        <details class="filters" ${ref(this.filtersRef)}>
+          <summary>
+            <gh-octicon vertical-align="middle" icon="sliders"></gh-octicon>
+            <span>Filters</span>
+          </summary>
+          <select name="currency" @change=${this.onCurrencyChange}>
+            ${[...new Set(Object.values(COUNTRY_DATA).map((c) => c.currency.code))].map(
+              (code) => html`<option>${code}</option>`
+            )}
+          </select>
+        </details>
       </form>
 
       ${this.isLoading
-        ? html`<p>Loading...</p>`
+        ? html`<div class="spinner">
+            ${unsafeSVG(svgSpinner)}<span>Loading results...</span>
+          </div>`
         : this.error
         ? html`<p>❌💀 ${this.error}</p>`
         : this.rows.length === 0
-        ? html`<p><!-- Idle --></p>`
+        ? html`<div class="placeholder">
+            <img src="images/money_with_wings_3d.png" aria-hidden="true" />
+            <span>Go save some money!</span>
+          </div>`
         : this.rows.every((r) => r.items.length === 0)
         ? html`<p>🔍 No results found!</p>`
         : html`
-            <table>
-              <thead>
-                <tr>
-                  <th>Country</th>
-                  <th>Product</th>
-                  <th>Price</th>
-                  <th>Link</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${this.rows.flatMap((countryData) =>
-                  countryData.items
-                    .map((item) => ({
-                      ...item,
-                      country_code: countryData.country_code,
-                    }))
-                    .map(
-                      (item) => html`
-                        <tr>
-                          <td>${COUNTRY_DATA[item.country_code].flag}</td>
-                          <td>${item.item}</td>
-                          <td>${this.getLowestPrice(item.prices)?.price}</td>
-                          <td>
-                            <view-shop-button
-                              href=${this.getLowestPrice(item.prices)?.link}
-                            ></view-shop-button>
-                          </td>
-                        </tr>
-                      `
-                    )
-                )}
-              </tbody>
-            </table>
+            <section class="results">
+              ${this.rows.flatMap((countryData) =>
+                countryData.items
+                  .map((item) => ({
+                    ...item,
+                    country_code: countryData.country_code,
+                  }))
+                  .map(
+                    (item) => html`
+                      <article class="result-item">
+                        <span>${COUNTRY_DATA[item.country_code].flag}</span>
+                        <img src=${item.picture_url} loading="lazy" aria-hidden="true" />
+                        <span class="name">${item.item}</span>
+                        <span class="price">
+                          ${new Intl.NumberFormat(["at", "hu"], {
+                            currency: this.currency.code,
+                            style: "currency",
+                            currencyDisplay: "symbol",
+                          }).format(Number(this.getLowestPrice(item.prices)?.price ?? 0))}
+                        </span>
+                        <view-shop-button
+                          href=${this.getLowestPrice(item.prices)?.link}
+                        ></view-shop-button>
+                      </article>
+                      <hr />
+                    `
+                  )
+              )}
+            </section>
           `}
     `;
   }
