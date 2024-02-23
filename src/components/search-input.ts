@@ -50,66 +50,85 @@ const COUNTRY_DATA: Record<string, { name: string; flag: string; currency: Curre
 @customElement("search-input")
 export class SearchInput extends LitElement {
   static override styles = css`
-    .input-row {
-      position: relative;
+    form {
+      max-width: 900px;
+      margin: 0 auto;
 
-      & input {
-        background-color: var(--color-light);
-        border-radius: var(--radii-full);
-        box-shadow: var(--shadow-sm);
-        color: white;
-        border: none;
-        padding: 0 120px 0 30px;
-        height: 50px;
-        font-size: 20px;
-        min-width: 100px;
-        width: 100%;
+      & .input-row {
+        position: relative;
+
+        & input {
+          background-color: var(--color-light);
+          border-radius: var(--radii-full);
+          box-shadow: var(--shadow-sm);
+          color: white;
+          border: none;
+          padding: 0 120px 0 30px;
+          height: 50px;
+          font-size: 20px;
+          min-width: 100px;
+          width: 100%;
+        }
+        & button {
+          position: absolute;
+          right: 4px;
+          top: 4px;
+          bottom: 4px;
+          border-radius: var(--radii-full);
+          background-color: var(--color-accent);
+          color: white;
+          font-weight: bold;
+          outline: none;
+          box-shadow: none;
+          border: none;
+          padding: 0 30px;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+        & button:disabled {
+          cursor: not-allowed;
+        }
+        & button:hover {
+          opacity: 0.8;
+        }
       }
-      & button {
-        position: absolute;
-        right: 4px;
-        top: 4px;
-        bottom: 4px;
-        border-radius: var(--radii-full);
-        background-color: var(--color-accent);
-        color: white;
-        font-weight: bold;
-        outline: none;
-        box-shadow: none;
-        border: none;
-        padding: 0 30px;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-      }
-      & button:disabled {
-        cursor: not-allowed;
-      }
-      & button:hover {
-        opacity: 0.8;
+
+      .filters {
+        transition: all 0.3s;
+        border-radius: var(--radii-md);
+        margin: 1rem 0;
+        padding: 10px 30px;
+
+        &[open] {
+          background: var(--color-light);
+          //box-shadow: var(--shadow-sm);
+        }
+        & > summary {
+          cursor: pointer;
+          display: flex;
+          gap: 10px;
+          align-items: center;
+          list-style: none;
+          user-select: none;
+        }
+        & label {
+          font-size: 0.8rem;
+          margin-right: 0.5rem;
+          font-weight: 500;
+        }
+        & select {
+          background: var(--color-accent-light);
+          border: none;
+          box-shadow: none;
+          border-radius: 4px;
+          padding: 4px 6px;
+          font-weight: 500;
+        }
       }
     }
 
-    .filters {
-      transition: all 0.3s;
-      border-radius: var(--radii-md);
-      margin: 1rem 0;
-      padding: 10px 30px;
-
-      &[open] {
-        background: var(--color-light);
-        //box-shadow: var(--shadow-sm);
-      }
-      & > summary {
-        cursor: pointer;
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        list-style: none;
-        user-select: none;
-      }
-    }
     .spinner {
       display: flex;
       justify-content: center;
@@ -250,11 +269,20 @@ export class SearchInput extends LitElement {
             <gh-octicon vertical-align="middle" icon="sliders"></gh-octicon>
             <span>Filters</span>
           </summary>
-          <select name="currency" @change=${this.onCurrencyChange}>
-            ${[...new Set(Object.values(COUNTRY_DATA).map((c) => c.currency.code))].map(
-              (code) => html`<option>${code}</option>`
-            )}
-          </select>
+
+          <div>
+            <label id="currency">Currency</label>
+            <select
+              aria-labelledby="currency"
+              name="currency"
+              @change=${this.onCurrencyChange}
+            >
+              ${[...new Set(Object.values(COUNTRY_DATA).map((c) => c.currency.code))].map(
+                (code) =>
+                  html`<option ?selected=${code === this.currency.code}>${code}</option>`
+              )}
+            </select>
+          </div>
         </details>
       </form>
 
