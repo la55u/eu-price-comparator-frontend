@@ -3,7 +3,7 @@ import { customElement, state, property } from "lit/decorators.js";
 import { unsafeSVG } from "lit/directives/unsafe-svg.js";
 import svgSpinner from "../assets/icons/spinner.svg?raw";
 
-import "./gh-octicon";
+import "./svg-icon";
 
 @customElement("view-shop-button")
 export class ViewShopButton extends LitElement {
@@ -17,6 +17,7 @@ export class ViewShopButton extends LitElement {
       outline: none;
       box-shadow: none;
       width: 130px;
+      padding: 0 1rem;
       height: 40px;
       cursor: pointer;
       display: inline-flex;
@@ -31,6 +32,20 @@ export class ViewShopButton extends LitElement {
     }
     button[disabled]:hover {
       cursor: "wait";
+    }
+    .short {
+      display: none;
+    }
+    @media (max-width: 600px) {
+      button {
+        width: 90px;
+      }
+      .short {
+        display: inline;
+      }
+      .full {
+        display: none;
+      }
     }
   `;
 
@@ -61,8 +76,9 @@ export class ViewShopButton extends LitElement {
         ${this.isLoading
           ? unsafeSVG(svgSpinner)
           : html`
-              <span>View shop</span>
-              <gh-octicon icon="arrow-up-right"></gh-octicon>
+              <span class="full">View shop</span>
+              <span class="short">View</span>
+              <svg-icon icon="arrow-up-right"></svg-icon>
             `}
       </button>
     `;

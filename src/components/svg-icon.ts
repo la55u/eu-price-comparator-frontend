@@ -11,8 +11,8 @@ const validAlign = {
   unset: true,
 };
 
-@customElement("gh-octicon")
-class Octicon extends LitElement {
+@customElement("svg-icon")
+class SvgIcon extends LitElement {
   @property({ reflect: true })
   icon: IconName;
 
@@ -50,4 +50,4 @@ class Octicon extends LitElement {
   }
 }
 
-export default Octicon;
+export default SvgIcon;
